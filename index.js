@@ -1,45 +1,85 @@
-const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+const apiUrl = "https://jsonplaceholder.typicode.com/posts";
 
-function getPost() {
-    fetch(`${apiUrl}/1`)
+
+function fetchPosts() {
+    fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
-            document.getElementById('output').innerText = JSON.stringify(data, null, 2);
-        });
+            const postsContainer = document.getElementById("posts-container");
+            postsContainer.innerHTML = "";
+
+            data.slice(0, 5).forEach(post => {
+                const postDiv = document.createElement("div");
+                postDiv.classList.add("post");
+
+                postDiv.innerHTML = `
+                    <h3>${post.title}</h3>
+                    <p>${post.body}</p>
+                    <button class="update-btn" data-id="${post.id}">Update</button>
+                    <button class="delete-btn" data-id="${post.id}">Delete</button>
+                `;
+
+                postsContainer.appendChild(postDiv);
+            });
+
+           
+            document.querySelectorAll(".update-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const postId = this.getAttribute("data-id");
+                    updatePost(postId, this);
+                });
+            });
+
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const postId = this.getAttribute("data-id");
+                    deletePost(postId, this);
+                });
+            });
+        })
+        .catch(error => console.error("Error fetching posts:", error));
 }
 
-function getPost() {
-    fetch(`${apiUrl}/1`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('output').innerText = JSON.stringify(data, null, 2);
-        });
-}
 
-function updatePost() {
-    fetch(`${apiUrl}/1`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: JSON.stringify({ 
-            id: 1,
-            title: "User",
-            body: 'This user is diligent and hardworking',
-            userId: 1,
-        }),
+function updatePost(id, btn) {
+    fetch(`${apiUrl}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            id: id,
+            title: "Updated User",
+            body: "This User is ready to deliver!",
+            userId: 1
+        })
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById('output').innerText = JSON.stringify(data, null, 2);
-    });
+        console.log("Update response:", data); 
+        alert(`Post ${id} updated!`);
+
+ 
+        const postDiv = btn.parentElement;
+        postDiv.querySelector("h3").innerText = "Updated User";
+        postDiv.querySelector("p").innerText = "This User has been updated successfully!";
+    })
+    .catch(error => console.error("Error updating post:", error));
 }
 
-function deletePost() {
-    fetch(`${apiUrl}/1`, {
-        method: 'DELETE',
+function deletePost(id, btn) {
+    fetch(`${apiUrl}/${id}`, {
+        method: "DELETE"
     })
-    .then(() => {
-        document.getElementById('output').innerText = 'Post deleted';
-    });
+    .then(response => {
+        if (response.ok) {
+            console.log(`Post ${id} deleted successfully.`);
+            alert(`Post ${id} deleted!`);
+            btn.parentElement.remove();
+        } else {
+            console.error("Failed to delete user.");
+        }
+    })
+    .catch(error => console.error("Error deleting post:", error));
 }
+
+
+window.onload = fetchPosts;
